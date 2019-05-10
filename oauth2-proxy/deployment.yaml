@@ -1,0 +1,67 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+  labels:
+    app: oauth2-proxy
+  name: oauth2-proxy
+  namespace: default
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: oauth2-proxy
+    spec:
+      containers:
+      - args:
+        - --provider=oidc
+        - --redirect-url=$(URL)/oauth2/callback
+        - --oidc-issuer-url=<YOUR OIDC ISSUER URL>
+        - --email-domain=*
+        - --upstream=file:///dev/null
+        - --http-address=0.0.0.0:4180
+        - -set-xauthrequest
+        env:
+        - name: URL
+          valueFrom:
+              configMapKeyRef:
+                name: site
+                key: url
+        - name: OAUTH2_PROXY_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-proxy-secret
+              key: clientId
+        - name: OAUTH2_PROXY_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-proxy-secret
+              key: clientSecret
+        - name: OAUTH2_PROXY_COOKIE_SECRET
+          value: <REPLACE WITH RANDOM STRING>
+        image: bitnami/oauth2-proxy:3.1.0
+        imagePullPolicy: Always
+        name: oauth2-proxy
+        ports:
+        - containerPort: 4180
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30

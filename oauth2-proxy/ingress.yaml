@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: oauth2-proxy
+  namespace: default
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: oauth2-proxy
+          servicePort: 4180
+        path: /oauth2
